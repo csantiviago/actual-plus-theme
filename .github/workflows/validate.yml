@@ -1,0 +1,22 @@
+name: Validar tema
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Toda segunda: pega mudança no validador ou nas variáveis do Actual.
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Arquivos gerados em dia
+        run: node scripts/build.mjs --check
+      - name: Validador do Actual
+        run: node scripts/validate.mjs
