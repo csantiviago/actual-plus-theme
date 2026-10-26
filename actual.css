@@ -41,6 +41,41 @@
   font-display: swap;
   src: url('fonts/plus-jakarta-sans-800.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-italic-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-italic-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-italic-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-italic-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-italic-800.woff2') format('woff2');
+}
 
 :root {
   /* Tipografia */
@@ -307,6 +342,17 @@
   --color-tooltipBackground: #1a2338;
   --color-tooltipBorder: #263450;
   --color-overlayBackground: rgba(0, 0, 0, 0.45);
+
+  /* Configurações (só em versões posteriores à 26.10.0) */
+  --color-settingsCardBackground: var(--color-tableBackground);
+  --color-settingsCardBorder: var(--color-tableBorder);
+  --color-settingsCardText: var(--color-tableText);
+  --color-settingsCardTextSubdued: #899fbe;
+  --color-settingsNavItemText: var(--color-pageText);
+  --color-settingsNavItemBackgroundHover: rgba(221, 230, 242, 0.08);
+  --color-settingsNavItemAccentSelected: #a7b7ff;
+  --color-settingsNavItemTextSelected: var(--color-settingsNavItemAccentSelected);
+  --color-settingsNavItemBackgroundSelected: rgba(167, 183, 255, 0.22);
 
   /* Gráficos — paleta categórica das zonas do Actual+ */
   --color-chartQual1: #5b8bf7;

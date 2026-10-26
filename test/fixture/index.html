@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture — linha de transação agendada (DOM/CSS derivado do Actual 26.10.0; não é o app completo)</title>
+<style>
+  /* @font-face e variáveis --color-*/--font-family vêm do actual.css, injetado pelo teste. */
+  html, body { margin: 0; padding: 0; font-size: 13px; }
+  body.theme-font, body.theme-font button, body.theme-font input { font-family: var(--font-family); }
+  body.default-font, body.default-font button, body.default-font input {
+    font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  body { background: var(--color-pageBackground); color: var(--color-tableText); overflow: hidden; }
+  * { box-sizing: border-box; }
+
+  /* View do component-library: flex column, min-width/height 0, position relative. */
+  .v { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; border: 0 solid; margin: 0; padding: 0; }
+  /* table.tsx Row: height 32, flex row. */
+  .row { flex-direction: row; height: 32px; flex: 0 0 32px; user-select: text; }
+  /* table.tsx Cell: justify center, 1px top/bottom border. */
+  .cell { justify-content: center; border-top-width: 1px; border-bottom-width: 1px; border-color: var(--color-tableBorder); }
+  /* Cell unexposed View: flex row, padding 0 5px, align center, font-size 13. */
+  .inner { flex-direction: row; flex: 1; padding: 0 5px; align-items: center; font-size: 13px; }
+  /* UnexposedCellContent (Text): span blockificado como flex item. */
+  .txt { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .txt.visible { overflow: visible; }
+  .badge.visible { overflow: visible; }
+  /* badge de status da linha agendada (TransactionsTable.tsx ~1793-1821). */
+  .badge { display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 5px; padding: 3px 7px; border-radius: 4px; }
+  .badge.upcoming { background: var(--color-upcomingBackground); color: var(--color-upcomingText); }
+  .badge.due { background: var(--color-warningBackground); color: var(--color-warningText); }
+  .badge.missed { background: var(--color-errorBackground); color: var(--color-errorText); }
+  .catbtn { flex-direction: row; align-items: center; flex: 1; padding: 4px; border-radius: 4px; }
+  .catbtn .txt { color: var(--color-formInputTextHighlight); font-style: italic; }
+
+  #stage { padding: 40px; }
+  .wrap { margin-bottom: 8px; }
+</style>
+</head>
+<body class="theme-font">
+<div id="stage"></div>
+<script>
+  const COLORS = {
+    tableBackground: '#161d2e',
+    textInactive: '#899fbe',
+  };
+
+  // styles.tnum (component-library/styles.ts): tnum + ss01 + ss04.
+  const TNUM = 'font-feature-settings: "tnum", "ss01", "ss04";';
+
+  function el(tag, cls, style) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (style) n.setAttribute('style', style);
+    return n;
+  }
+
+  // Uma linha de transação com uma única célula de largura fixa, fiel aos
+  // wrappers de table.tsx (Cell > View inner > span truncado).
+  window.renderRow = function renderRow(opts) {
+    const { width, text, italic, visible, kind, align, status } = opts;
+    const stage = document.getElementById('stage');
+    stage.innerHTML = '';
+    const wrap = el('div', 'wrap');
+    const row = el('div', 'v row');
+    row.id = 'row';
+    row.style.background = COLORS.tableBackground;
+    row.style.color = COLORS.textInactive;
+    row.style.fontStyle = italic ? 'italic' : 'normal';
+    row.style.width = '640px';
+    const cell = el('div', 'v cell');
+    cell.id = 'cell';
+    cell.style.width = width + 'px';
+    cell.style.flex = '0 0 ' + width + 'px';
+    const inner = el('div', 'v inner');
+    if (kind === 'badge') {
+      const badge = el('span', 'badge ' + (status || 'upcoming'));
+      badge.id = 'badge';
+      badge.textContent = text;
+      const btn = el('div', 'v catbtn');
+      btn.appendChild(badge);
+      inner.appendChild(btn);
+    } else if (kind === 'payee') {
+      // PayeeCell não-parent: PayeeIcons (23px, margens -5/2) + div que
+      // encolhe até o texto (overflow hidden, display flex) + span truncado.
+      const icon = el('div', 'v');
+      icon.style.width = '23px';
+      icon.style.height = '23px';
+      icon.style.marginLeft = '-5px';
+      icon.style.marginRight = '2px';
+      icon.style.flexShrink = '0';
+      const hug = el('div', 'v');
+      hug.id = 'payee-wrap';
+      hug.style.overflow = 'hidden';
+      hug.style.textOverflow = 'ellipsis';
+      hug.style.display = 'flex';
+      hug.style.alignItems = 'center';
+      const span = el('span', 'txt' + (visible ? ' visible' : ''));
+      span.id = 'txt';
+      span.textContent = text;
+      hug.appendChild(span);
+      inner.appendChild(icon);
+      inner.appendChild(hug);
+    } else if (kind === 'amount') {
+      // InputCell amount: span truncado + textAlign right + styles.tnum.
+      const span = el('span', 'txt' + (visible ? ' visible' : ''));
+      span.id = 'txt';
+      span.textContent = text;
+      span.style.textAlign = 'right';
+      span.style.setProperty('font-feature-settings', '"tnum", "ss01", "ss04"');
+      inner.appendChild(span);
+    } else {
+      const span = el('span', 'txt' + (visible ? ' visible' : ''));
+      span.id = 'txt';
+      span.textContent = text;
+      if (align === 'right') span.style.textAlign = 'right';
+      inner.appendChild(span);
+    }
+    cell.appendChild(inner);
+    row.appendChild(cell);
+    wrap.appendChild(row);
+    stage.appendChild(wrap);
+    return true;
+  };
+
+  // Página de conta simplificada com as colunas reais (date 110, payee/notes
+  // flex, category, payment/deposit 100, cleared 38) para a captura de contexto.
+  window.renderAccount = function renderAccount(opts = {}) {
+    const stage = document.getElementById('stage');
+    stage.innerHTML = '';
+    const root = el('div', 'v');
+    root.style.width = '1100px';
+    root.style.background = 'var(--color-tableBackground)';
+    const rows = [
+      { date: '10/04/2026', payee: '(No payee)', notes: 'Utilities', status: 'upcoming', badge: 'Upcoming', amount: '1.900,00', preview: true },
+      { date: '10/03/2026', payee: 'Dominion Power', notes: 'Phone bills', status: 'due', badge: 'Due', amount: '120,00', preview: true },
+      { date: '10/02/2026', payee: 'Fast Internet', notes: 'Internet bill', status: 'missed', badge: 'Missed', amount: '140,00', preview: true },
+      { date: '10/03/2026', payee: 'Movies', notes: '#entertainment', amount: '1,86', preview: false },
+    ];
+    for (const r of rows) {
+      const row = el('div', 'v row');
+      row.style.color = r.preview ? 'var(--color-tableTextInactive)' : 'var(--color-tableText)';
+      row.style.fontStyle = r.preview ? 'italic' : 'normal';
+      if (opts.width) row.style.width = opts.width + 'px';
+      const mk = (w, inner, flex) => {
+        const cell = el('div', 'v cell');
+        if (flex) { cell.style.flex = '1 1 0'; cell.style.minWidth = '0'; }
+        else { cell.style.width = w + 'px'; cell.style.flex = '0 0 ' + w + 'px'; }
+        const box = el('div', 'v inner');
+        box.appendChild(inner);
+        cell.appendChild(box);
+        return cell;
+      };
+      const txt = t => { const s = el('span', 'txt'); s.textContent = t; return s; };
+      row.appendChild(mk(110, txt(r.date)));
+      row.appendChild(mk(0, txt(r.payee), true));
+      row.appendChild(mk(0, txt(r.notes), true));
+      const catCell = el('div', 'v cell');
+      catCell.style.minWidth = '0';
+      catCell.style.flex = '1 1 0';
+      const catBox = el('div', 'v inner');
+      if (r.badge) {
+        const b = el('span', 'badge ' + r.status);
+        b.textContent = r.badge;
+        catBox.appendChild(b);
+      } else {
+        const s = el('span', 'txt');
+        s.textContent = r.preview ? 'Split' : 'Entertainment';
+        s.style.fontStyle = 'italic';
+        s.style.color = 'var(--color-pageTextSubdued)';
+        catBox.appendChild(s);
+      }
+      catCell.appendChild(catBox);
+      row.appendChild(catCell);
+      const amt = el('span', 'txt');
+      amt.textContent = r.amount;
+      amt.style.textAlign = 'right';
+      amt.style.setProperty('font-feature-settings', '"tnum", "ss01", "ss04"');
+      row.appendChild(mk(100, amt));
+      row.appendChild(mk(100, txt('')));
+      const cleared = el('div', 'v cell');
+      cleared.style.width = '38px';
+      cleared.style.flex = '0 0 38px';
+      row.appendChild(cleared);
+      root.appendChild(row);
+    }
+    stage.appendChild(root);
+    return true;
+  };
+
+  // Métricas de layout + tinta via Canvas (inclui overhang do itálico).
+  window.measure = function measure(opts) {
+    const row = document.getElementById('row');
+    const cell = document.getElementById('cell');
+    const span = document.getElementById('txt') || document.getElementById('badge');
+    const r = row.getBoundingClientRect();
+    const c = cell.getBoundingClientRect();
+    const s = span.getBoundingClientRect();
+    const cs = getComputedStyle(span);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const px = parseFloat(getComputedStyle(document.body).fontSize);
+    const family = getComputedStyle(document.body).fontFamily;
+    const m = (font, txt) => {
+      ctx.font = font;
+      const t = ctx.measureText(txt);
+      return {
+        width: +t.width.toFixed(3),
+        left: +t.actualBoundingBoxLeft.toFixed(3),
+        right: +t.actualBoundingBoxRight.toFixed(3),
+        ascent: +t.actualBoundingBoxAscent.toFixed(3),
+        descent: +t.actualBoundingBoxDescent.toFixed(3),
+      };
+    };
+    const normalF = 'normal 13px ' + family;
+    const italicF = 'italic 13px ' + family;
+    return {
+      row: { x: r.x, y: r.y, w: r.width, h: r.height },
+      cell: { x: c.x, y: c.y, w: c.width, h: c.height },
+      span: { x: s.x, y: s.y, w: s.width, h: s.height },
+      clientWidth: span.clientWidth,
+      scrollWidth: span.scrollWidth,
+      truncated: span.scrollWidth > span.clientWidth,
+      css: {
+        fontStyle: cs.fontStyle,
+        fontFamily: cs.fontFamily,
+        fontWeight: cs.fontWeight,
+        fontSize: cs.fontSize,
+        lineHeight: cs.lineHeight,
+        overflow: cs.overflow,
+        textOverflow: cs.textOverflow,
+        whiteSpace: cs.whiteSpace,
+      },
+      canvas: { normal: m(normalF, opts.text), italic: m(italicF, opts.text) },
+      fontCheckItalic: document.fonts.check('italic 13px "Plus Jakarta Sans"'),
+      fontCheckNormal: document.fonts.check('normal 13px "Plus Jakarta Sans"'),
+      faces: [...document.fonts].map(f => ({ family: f.family, style: f.style, weight: f.weight, status: f.status })),
+    };
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "actual-plus-theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tema Actual+ para o Actual Budget (ferramentas de build e teste)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs --check",
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:static": "node --test test/theme.test.mjs",
+    "validate": "ACTUAL_REF=v26.10.0 node scripts/validate.mjs",
+    "validate:master": "node scripts/validate.mjs --compat",
+    "fonts:italic": "node scripts/make-italic-fonts.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0",
+    "subset-font": "^2.4.0"
+  }
+}

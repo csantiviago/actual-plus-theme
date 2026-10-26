@@ -1,7 +1,15 @@
 #!/usr/bin/env node
-// Valida o tema com o validador REAL do Actual (customThemes.ts do master),
-// do mesmo jeito que o app faz ao instalar pelo catálogo, e confere se o tema
-// cobre todas as variáveis --color-* dos temas embutidos.
+// Valida o tema com o validador REAL do Actual (customThemes.ts), do mesmo
+// jeito que o app faz ao instalar pelo catálogo, e confere se o tema cobre
+// todas as variáveis --color-* dos temas embutidos.
+//
+//   node scripts/validate.mjs                 versão suportada (SUPPORTED_REF); bloqueante no CI
+//   node scripts/validate.mjs --compat        master; checagem de compatibilidade, separada
+//   ACTUAL_REF=<tag|branch|sha> node ...      qualquer outra referência
+//
+// Falha é falha: o modo --compat sai com código 1 se o master quebrar o tema
+// ou trouxer variáveis novas sem mapeamento. Quem decide se isso bloqueia é o
+// CI (job separado), não este script.
 //
 // Requer Node ≥ 22.18 (type stripping de TypeScript sem flag).
 
@@ -11,7 +19,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const ref = process.env.ACTUAL_REF || 'master';
+export const SUPPORTED_REF = 'v26.10.0';
+const compat = process.argv.includes('--compat');
+const ref = process.env.ACTUAL_REF || (compat ? 'master' : SUPPORTED_REF);
+console.log(`Actual @ ${ref} (${ref === SUPPORTED_REF ? 'versão suportada' : 'compatibilidade, não é a versão suportada'})`);
 const raw = p => `https://raw.githubusercontent.com/actualbudget/actual/${ref}/${p}`;
 
 async function get(url) {
@@ -78,6 +89,8 @@ const missing = [...base].filter(n => !ours.has(n));
 const extra = [...ours].filter(n => !base.has(n));
 if (missing.length) fail(`faltam ${missing.length} variáveis: ${missing.join(', ')}`);
 else ok(`cobre as ${base.size} variáveis --color-* dos temas embutidos`);
-if (extra.length) console.warn(`! variáveis que o Actual não usa mais: ${extra.join(', ')}`);
+if (extra.length) {
+  console.warn(`! variáveis do tema ausentes nesta versão do Actual (ignoradas): ${extra.join(', ')}`);
+}
 
 process.exit(failed ? 1 : 0);

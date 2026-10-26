@@ -413,6 +413,24 @@ const sections = [
     },
   ],
   [
+    // Variáveis que o Actual acrescentou depois da 26.10.0 (conferido no
+    // master em 26/10/2026). Na versão suportada elas são ignoradas; no master
+    // fazem a tela de Configurações seguir a paleta em vez de cair no dark
+    // embutido. Semântica espelha packages/component-library/src/themes/dark.css.
+    'Configurações (só em versões posteriores à 26.10.0)',
+    {
+      settingsCardBackground: 'var(--color-tableBackground)',
+      settingsCardBorder: 'var(--color-tableBorder)',
+      settingsCardText: 'var(--color-tableText)',
+      settingsCardTextSubdued: ap.muted,
+      settingsNavItemText: 'var(--color-pageText)',
+      settingsNavItemBackgroundHover: rgba(ap.text, 0.08),
+      settingsNavItemAccentSelected: ap.accentH,
+      settingsNavItemTextSelected: 'var(--color-settingsNavItemAccentSelected)',
+      settingsNavItemBackgroundSelected: rgba(ap.accentH, 0.22),
+    },
+  ],
+  [
     'Gráficos — paleta categórica das zonas do Actual+',
     {
       chartQual1: ap.segFixos,
@@ -431,15 +449,22 @@ const sections = [
 // ─── Saída ───────────────────────────────────────────────────────────────
 const weights = [400, 500, 600, 700, 800];
 
+// Faces reais para normal e italic: sem as itálicas o navegador sintetiza a
+// inclinação (font-synthesis), que não tem os mesmos contornos nem métricas.
+const styles = ['normal', 'italic'];
+const fontFile = (style, w) =>
+  `fonts/plus-jakarta-sans-${style === 'italic' ? 'italic-' : ''}${w}.woff2`;
+
 function fontFaces(src) {
-  return weights
+  return styles
+    .flatMap(style => weights.map(w => [style, w]))
     .map(
-      w => `@font-face {
+      ([style, w]) => `@font-face {
   font-family: 'Plus Jakarta Sans';
-  font-style: normal;
+  font-style: ${style};
   font-weight: ${w};
   font-display: swap;
-  src: url('${src(w)}') format('woff2');
+  src: url('${src(style, w)}') format('woff2');
 }`,
     )
     .join('\n');
@@ -468,11 +493,10 @@ const header = `/*
 `;
 
 const themeCss =
-  header + '\n' + fontFaces(w => `fonts/plus-jakarta-sans-${w}.woff2`) + '\n\n' + rootBlock();
+  header + '\n' + fontFaces(fontFile) + '\n\n' + rootBlock();
 
-const fontData = w =>
-  'data:font/woff2;base64,' +
-  readFileSync(join(root, 'fonts', `plus-jakarta-sans-${w}.woff2`)).toString('base64');
+const fontData = (style, w) =>
+  'data:font/woff2;base64,' + readFileSync(join(root, fontFile(style, w))).toString('base64');
 
 const overrideCss =
   header.replace(
