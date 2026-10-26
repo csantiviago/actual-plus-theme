@@ -9,6 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Bloqueante: versão suportada do Actual (v26.10.0, ver SUPPORTED_REF em
+  # scripts/validate.mjs), arquivos gerados em dia e regressão tipográfica.
   validate:
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +18,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+      - run: npm ci
       - name: Arquivos gerados em dia
         run: node scripts/build.mjs --check
-      - name: Validador do Actual
+      - name: Validador do Actual (versão suportada)
         run: node scripts/validate.mjs
+      - name: Testes estáticos e tipográficos (Chromium)
+        run: |
+          npx playwright install --with-deps chromium
+          npm test
+
+  # Compatibilidade com o master do Actual. É um job separado e NÃO é check
+  # obrigatório: se o master mudar o formato ou trouxer variáveis novas, ele
+  # fica vermelho de verdade (sem continue-on-error), sinalizando o trabalho a
+  # fazer sem bloquear a versão suportada.
+  compat-master:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validador do Actual (master)
+        run: node scripts/validate.mjs --compat
